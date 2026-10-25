@@ -2,7 +2,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from pathlib import Path
 import csv
 
-INCOMING_DIR = Path("/opt/airflow/data/incoming")
+INCOMING_DIR = Path("/opt/airflow/dags/data/incoming")
 
 
 
