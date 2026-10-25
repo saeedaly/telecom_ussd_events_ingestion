@@ -60,30 +60,22 @@ telecom_ussd_events_ingestion/
 ├── dags/
 │   ├── telecom_ussd_events_ingestion.py
 │   ├── scripts/
+|   |   |── generate_random_data.py
 │   │   └── telecom_functions.py
-│   └── sql/
-│       └── create_tables.sql
-│
-├── data/
-│   └── incoming/
-│       └── test_ussd_events.csv
+│   ├── sql/
+│   |    └── create_tables.sql
+|   └── data/
+│       └── incoming/
+│           └── test_ussd_events.csv
 │
 ├── docker-compose.yaml
-├── .env.example
-├── .gitignore
+├── .env
 └── README.md
 ```
 
 The tree above illustrates the intended organization. Actual filenames may differ as the project evolves.
 
 ## Prerequisites
-
-Install the following before running the project:
-
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) with Docker Compose support.
-- [Git](https://git-scm.com/downloads) to clone the repository.
-- A web browser to access the Airflow UI.
-- A Gmail account and App Password if Gmail notifications are required.
 
 Ensure Docker Desktop is running before starting the containers.
 
@@ -98,25 +90,14 @@ cd telecom_ussd_events_ingestion
 
 ### 2. Configure environment variables
 
-Create a local `.env` file using the project's environment template.
-
-If `.env.example` is available:
-
-```bash
-cp .env.example .env
-```
-
-On Windows PowerShell, you can use:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-If the template does not exist yet, create `.env` based on the configuration required by `docker-compose.yaml`.
-
 Configure the required Airflow settings and SMTP values. Use your own Gmail address and Gmail App Password for email notifications.
-
-**Security:** Never commit actual passwords, API keys, or other secrets to GitHub. Keep `.env` local and commit only a sanitized `.env.example`.
+```bash
+- Open Manage Your google account
+- search for "App Passwords"
+- create a new app specific password.
+- copy the generated token
+- paste it on your (AIRFLOW__SMTP__SMTP_PASSWORD=your token)
+```
 
 ### 3. Validate the Docker Compose configuration
 
@@ -170,13 +151,12 @@ The DAG is configured for a five-minute schedule, but scheduled execution depend
 
 ## Prepare Test Data
 
-Place a CSV file in the local incoming directory, which is mounted into the Airflow containers at:
-
-```text
-/opt/airflow/data/incoming
+Generate a test data: 
+```bash
+python dags/scripts/generate_random_data.py
 ```
 
-For example, create `data/incoming/test_ussd_events.csv`:
+this command will create `/dags/data/incoming/test_ussd_events.csv`:
 
 ```csv
 event_time,msisdn,service_id_name,service,status
@@ -188,8 +168,6 @@ event_time,msisdn,service_id_name,service,status
 ```
 
 This sample contains five data records, excluding the header.
-
-Ensure that the CSV columns match the schema and column mapping expected by the ingestion code.
 
 ## PostgreSQL Configuration
 
@@ -242,10 +220,6 @@ ORDER BY event_time DESC
 LIMIT 10;
 ```
 
-For a clean initial test, if the table starts empty and the sample file is successfully loaded once, the expected row count is five.
-
-Repeated runs may insert duplicates unless deduplication is implemented.
-
 ## Email Notifications
 
 The project supports SMTP configuration for email notifications.
@@ -270,49 +244,8 @@ Email delivery also depends on the notification task's implementation and its co
 
 ## Useful Docker Commands
 
-| Command | Purpose |
-|---|---|
-| `docker compose up -d` | Start the project |
-| `docker compose ps` | Check container status |
-| `docker compose logs -f airflow-scheduler` | Follow scheduler logs |
-| `docker compose logs -f telecom-db` | Follow telecom database logs |
-| `docker compose restart airflow-scheduler` | Restart the scheduler |
-| `docker compose down` | Stop and remove containers |
-| `docker compose down -v` | Remove containers and named volumes |
-
 **Warning:** `docker compose down -v` deletes the project's named database volumes, including stored telecom data and Airflow metadata. Use it only when you intentionally want to reset the environment.
 
-## Troubleshooting
-
-### DAG does not appear in Airflow
-
-- Check that the DAG Python file is in the mounted `dags` directory.
-- Inspect the DAG processor logs.
-- Resolve Python import errors and syntax errors.
-
-### CSV files are not detected
-
-- Confirm that files exist in the local `data/incoming` directory.
-- Verify the directory is mounted to `/opt/airflow/data`.
-- Confirm that the code uses the same directory and file extension.
-
-### PostgreSQL connection fails
-
-- Verify that `telecom-db` is healthy.
-- Check the `postgres_conn` connection ID and credentials.
-- Use port `5432` from other containers and `5433` from the host.
-
-### Email notifications fail
-
-- Verify SMTP credentials and Gmail App Password.
-- Confirm that the SMTP settings are loaded into Airflow.
-- Inspect the notification task logs.
-
-### Database table is missing
-
-- Verify that `dags/sql/create_tables.sql` exists and defines the expected table.
-- Remember that PostgreSQL initialization scripts run automatically only when the database data directory is initialized for the first time.
-- Apply schema changes explicitly when using an existing database volume.
 
 ## Future Improvements
 
