@@ -24,28 +24,6 @@ The pipeline runs in a Docker-based environment and uses Python for data process
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    A[USSD Event Source]
-    B[CSV Files]
-    C[Incoming Data Directory]
-    D[Apache Airflow DAG]
-    E[Detect CSV Files]
-    F[Count Source Records]
-    G[Email Notification]
-    H[Load CSV into PostgreSQL]
-    I[(Central Telecom Database)]
-
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-    G --> H
-    H --> I
-```
-
 The source system is simulated using CSV files placed in a shared directory. Apache Airflow orchestrates the ingestion workflow, while PostgreSQL stores the resulting event records.
 
 ## Technology Stack
