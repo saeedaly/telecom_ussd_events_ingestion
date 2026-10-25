@@ -32,7 +32,7 @@ with DAG (
     send_email = EmailOperator(
         task_id="send_test_email",
         conn_id="test_stmp",
-        to="emansaeed15696@gmail.com",
+        to="YOUR_EMAIL@gmail.com",
         subject="New USSD File Arrived",
         html_content="""
         <h2>Airflow detected CSV files.</h2>
